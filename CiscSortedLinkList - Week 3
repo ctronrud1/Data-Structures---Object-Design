@@ -1,0 +1,528 @@
+package edu.ust.cisc;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+public class CiscSortedLinkedList<E extends Comparable<E>> implements CiscList<E> {
+
+	/**
+	 * A reference to this list's dummy node.  Its next reference should refer to the node containing the first element
+	 * in this list, or it should refer to itself if the list is empty.  The next reference within the node containing
+	 * the last element in this list should refer to dummy, thus creating a cyclic list.
+	 */
+	private Node<E> dummy;
+
+	/**
+	 * Number of elements in the list.
+	 */
+	private int size;
+
+	/**
+	 * Constructs an empty CiscSortedLinkedList instance with a non-null dummy node whose next reference refers to
+	 * itself.
+	 */
+	public CiscSortedLinkedList() {
+		dummy = new Node<>(null, null);
+		dummy.next = dummy;
+		size = 0;
+	}
+
+	/**
+	 * Returns the number of elements in this list.
+	 * Video: https://youtu.be/LBaZ37iWvBY
+	 *
+	 * @return the number of elements in this list
+	 */
+	@Override
+	public int size() {
+		return size;
+	}
+
+	/**
+	 * Returns {@code true} if this list contains no elements.
+	 * Video: https://youtu.be/tpdYTPPAXoo
+	 *
+	 * @return {@code true} if this list contains no elements
+	 */
+	@Override
+	public boolean isEmpty() {
+		return size == 0;
+	}
+
+	/**
+	 * Returns {@code true} if this list contains the specified element (compared using the {@code equals} method).
+	 * This implementation should stop searching as soon as it is able to determine that the specified element is not
+	 * present.
+	 * Video: https://youtu.be/ID7JheWgEko
+	 *
+	 * @param o element whose presence in this list is to be tested
+	 * @return {@code true} if this list contains the specified element
+	 * @throws NullPointerException if the specified element is null
+	 */
+	@Override
+	public boolean contains(Object o) {
+		if (o == null) {
+			throw new NullPointerException();
+		}
+		Node<E> current = dummy.next;
+		while (current != dummy) {
+			if (current.data.equals(o)) {
+				return true;
+			}
+			current = current.next;
+		}
+		return false;
+	}
+
+	/**
+	 * Returns an iterator over the elements in this list in proper sequence.
+	 * Video: https://youtu.be/YY1hD41xvqU
+	 *
+	 * @return an iterator over the elements in this list in proper sequence
+	 */
+	@Override
+	public Iterator<E> iterator() {
+		return new CiscLinkedListIterator();
+	}
+
+	/**
+	 * Returns an array containing all of the elements in this list in proper sequence (from first to last element).
+	 * Video: https://youtu.be/6UVeZw8vYxk
+	 *
+	 * <p>The returned array will be "safe" in that no references to it are maintained by this list.  (In other words,
+	 * this method must allocate a new array even if this list is backed by an array). The caller is thus free to modify
+	 * the returned array.
+	 *
+	 * @return an array containing all of the elements in this list in proper sequence
+	 */
+	@Override
+	public Object[] toArray() {
+		Object [] arr = new Object[size];
+		toArray(arr, 0, dummy.next);
+		return arr;
+	}
+
+	/**
+	 * {@link #toArray} recursive helper method. Adds the element contained in the specified node to the specified index
+	 * in the specified array.  Recursion stops when the specified node is the dummy node.
+	 *
+	 * @param arr the array into which each element in this list should be added
+	 * @param index the index into which the next element in this list should be added
+	 * @param n the node containing the next element in this list to add to the array
+	 */
+	private void toArray(Object[] arr, int index, Node<E> n) {
+		if (n == dummy || index >= size) {
+			return;
+		}
+		arr[index] = n.data;
+		toArray(arr, index + 1, n.next);
+	}
+
+	/**
+	 * Adds the specified element to its sorted location in this list.
+	 * Video: https://youtu.be/lI1xG76BbEo
+	 *
+	 * <p>Lists may place the specified element at arbitrary locations if desired.  In particular, an ordered list will
+	 * insert the specified element at its sorted location.  List classes should clearly specify in their documentation
+	 * how elements will be added to the list if different from the default behavior (end of this list).
+	 *
+	 * @param value element to be added to this list
+	 * @return {@code true}
+	 * @throws NullPointerException if the specified element is null
+	 */
+	@Override
+	public boolean add(E value) {
+		if (value ==  null) {
+			throw new NullPointerException();
+		}
+		Node<E> newNode = new Node<>(value, null);
+		Node<E> prev = findInsertionPoint(value);
+		newNode.next = prev.next;
+		prev.next = newNode;
+		size++;
+		return true;
+	}
+
+	private Node<E> findInsertionPoint(E value) {
+		Node<E> current = dummy.next;
+		Node<E> prev = dummy;
+
+		while (current != dummy && current.data.compareTo(value) < 0) {
+			prev = current;
+			current = current.next;
+		}
+
+		return prev;
+	}
+
+	/**
+	 * {@link #add} recursive helper method. Adds the specified value to the list in a new node following the specified
+	 * node (if that is the appropriate location in the list).
+	 *
+	 * @param value element to be added to this list
+	 * @param n a reference to the node possibly prior to the one created by this method
+	 */
+	private void add(E value, Node<E> n) {
+		// Base case: if n is the dummy node or the value is greater than or equal to n's data
+		if (n.next == dummy || value.compareTo(n.next.data) < 0) {
+			Node<E> newNode = new Node<>(value, n.next);
+			n.next = newNode;
+			size++;
+			return;
+		}
+
+		// Recursive case: move to the next node and call add recursively
+		add(value, n.next);
+	}
+
+
+	/**
+	 * Removes the first occurrence of the specified element from this list, if it is present.  If this list does not
+	 * contain the element, it is unchanged. Returns {@code true} if this list contained the specified element. This
+	 * implementation should stop searching as soon as it is able to determine that the specified element is not
+	 * present.
+	 * Video: https://youtu.be/MzUMAxWxx90
+	 *
+	 * @param o element to be removed from this list, if present
+	 * @return {@code true} if this list contained the specified element
+	 * @throws NullPointerException if the specified element is null
+	 */
+
+	@Override
+	public boolean remove(Object o) {
+		if (o == null) {
+			throw new NullPointerException();
+		}
+		return remove(o, dummy);
+	}
+
+	/**
+	 * {@link #remove} recursive helper method. Removes the node following n if it contains the specified element.  This
+	 * implementation should stop searching as soon as it is able to determine that the specified element is not
+	 * present.
+	 *
+	 * @param o element to be removed from this list, if present
+	 * @param n a reference to the node prior to the one possibly containing the value to remove
+	 * @return true if the object was removed, false otherwise
+	 */
+	private boolean remove(Object o, Node<E> n) {
+		if (!isEmpty()) {
+			if (size != 1) {
+				if (n.next.data != null) {
+					if (dummy.next.data.equals(o) || n.next.data.equals(o)) {
+						n.next = n.next.next;
+						size--;
+						return true;
+					} else {
+						return remove(o, n.next);
+					}
+				}
+			} else {
+				if (dummy.next.data.equals(o)) {
+					clear();
+					return true;
+				}
+				return false;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Removes all of the elements from this list. The list will be empty after this call returns.
+	 * Video: https://youtu.be/fNCyBCJZrKg
+	 */
+	@Override
+	public void clear() {
+		dummy.next = dummy;
+		size = 0;
+	}
+
+	/**
+	 * Returns the element at the specified position in this list.
+	 * Video: https://youtu.be/sUfETg2mTE8
+	 *
+	 * @param index index of the element to return
+	 * @return the element at the specified position in this list
+	 * @throws IndexOutOfBoundsException if the index is out of range
+	 */
+	@Override
+	public E get(int index) {
+		if (index < 0 || index >= size) {
+			throw new IndexOutOfBoundsException("Invalid index: " + index);
+		}
+
+		Node<E> current = dummy.next;
+		for (int i = 0; i < index; i++) {
+			current = current.next;
+		}
+
+		return current.data;
+	}
+
+
+	/**
+	 * {@link #get} recursive helper method.  Returns the element contained within the node parameter whose index
+	 * matches the specified index.
+	 *
+	 * @param index index of the element to return
+	 * @param currentIndex the index of the node parameter
+	 * @param n the node containing the element at currentIndex
+	 * @return the element at the specified position (index) in this list
+	 */
+	private E get(int index, int currentIndex, Node<E> n) {
+		if (currentIndex == index) {
+			return n.data;
+		}
+
+		return get(index, currentIndex + 1, n.next);
+	}
+
+	/**
+	 * This operation is not supported by CiscSortedLinkedList.
+	 * Video: https://youtu.be/rFZ_cqlvYlw
+	 *
+	 * @param index index of the element to replace
+	 * @param element element to be stored at the specified position
+	 * @return the element previously at the specified position
+	 * @throws UnsupportedOperationException if the {@code set} operation is not supported by this list
+	 */
+	@Override
+	public E set(int index, E element) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * This operation is not supported by CiscSortedLinkedList.
+	 * Video: https://youtu.be/7OOq5P_NrHM
+	 *
+	 * @param index index at which the specified element is to be inserted
+	 * @param element element to be inserted
+	 * @throws UnsupportedOperationException if the {@code set} operation is not supported by this list
+	 */
+	@Override
+	public void add(int index, E element) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Appends all elements in the specified list to the end of this list, in the order that they are returned by the
+	 * specified list's iterator.
+	 * Video: https://youtu.be/HuNk7PAr9ZQ
+	 *
+	 * @param c list containing elements to be added to this list
+	 * @return {@code true} if this list changed as a result of the call
+	 * @throws NullPointerException          if the specified list is null
+	 */
+	@Override
+	public boolean addAll(CiscList<? extends E> c) {
+		if ( c== null) {
+			throw new NullPointerException();
+		}
+		boolean modified = false;
+		for (E element : c) {
+			if (add(element)) {
+				modified = true;
+			}
+		}
+		return modified;
+	}
+
+	/**
+	 * Removes the element at the specified position in this list.  Shifts any subsequent elements to the left
+	 * (subtracts one from their indices).  Returns the element that was removed from the list.
+	 * Video: https://youtu.be/IXywBQEA1Ko
+	 *
+	 * @param index the index of the element to be removed
+	 * @return the element previously at the specified position
+	 * @throws IndexOutOfBoundsException if the index is out of range
+	 */
+	@Override
+	public E remove(int index) {
+		if (index < 0 || index >= size) {
+			throw new IndexOutOfBoundsException("Invalid index: " + index);
+		}
+
+		return remove(index, 0, dummy.next);
+		}
+
+
+
+
+	/**
+	 * {@link #remove} recursive helper method. Removes the node following n if it contains the element at the specified
+	 * index.
+	 *
+	 * @param index the index of the element to be removed
+	 * @param currentIndex the index of the node parameter
+	 * @param n the node containing the element at currentIndex
+	 * @return the removed element, or null if no element was removed
+	 */
+	private E remove(int index, int currentIndex, Node<E> n) {
+		if (size == 1) {
+			E single = dummy.next.data;
+			clear();
+			return single;
+		} else {
+			if (index == 0) {
+				E data = dummy.next.data;
+				dummy.next = dummy.next.next;
+				size--;
+				return data;
+			} else {
+				if (currentIndex != index-1) {
+					return remove(index, currentIndex + 1, n.next);
+				} else {
+					E data = n.next.data;
+					n.next = n.next.next;
+					size--;
+					return data;
+				}
+			}
+		}
+	}
+
+	/**
+	 * Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not
+	 * contain the element (compared using the {@code equals} method).  This implementation should stop searching as
+	 * soon as it is able to determine that the specified element is not present.
+	 * Video: https://youtu.be/WIC1u3AXnRM
+	 *
+	 * @param o element to search for
+	 * @return the index of the first occurrence of the specified element in this list, or -1 if this list does not
+	 * contain the element
+	 * @throws NullPointerException if the specified element is null
+	 */
+	@Override
+	public int indexOf(Object o) {
+		if(o == null) {
+			throw new NullPointerException();
+		}
+		return indexOf(o,0, dummy.next);
+	}
+
+	/**
+	 * {@link #indexOf} recursive helper method. Returns currentIndex if the element contained in the node parameter is
+	 * equal to the specified element to search for.  This implementation should stop searching as soon as it is able to
+	 * determine that the specified element is not present.
+	 *
+	 * @param o element to search for
+	 * @param currentIndex the index of the node parameter
+	 * @param n the node containing the element at currentIndex
+	 * @return the index of the first occurrence of the specified element in this list, or -1 if this list does not
+	 * contain the element
+	 */
+	private int indexOf(Object o, int currentIndex, Node<E> n) {
+		//base cases
+		if (currentIndex == size) {
+			return -1;
+		}
+		if (n != dummy && n.data.equals(o)) {
+			return currentIndex;
+		}
+		return indexOf(o, currentIndex + 1, n.next);
+	}
+
+	/**
+	 * Returns a string representation of this list.  This string should consist of a comma separated list of values
+	 * contained in this list, in order, surrounded by square brackets (examples: [3, 6, 7] and []).
+	 * Video: https://youtu.be/Y9OlnBWnrKs
+	 *
+	 * @return a string representation of this list
+	 */
+
+	public String toString() {
+		StringBuilder result = new StringBuilder("[");
+		Node<E> current = dummy.next;
+
+		boolean first = true;
+		while (current != dummy) {
+			if (!first) {
+				result.append(", ");
+			}
+			result.append(current.data);
+			first = false;
+			current = current.next;
+		}
+
+		result.append("]");
+		return result.toString();
+	}
+
+
+
+
+
+	/**
+	 * {@link #toString} recursive helper method. Returns a string representation of this list, beginning with the
+	 * element in the specified node
+	 *
+	 * @param n the node containing the next element to append to the string
+	 * @return a string representation of this list, beginning with the element in the specified node
+	 */
+	private String toString(Node<E> n) {
+		if (n == dummy) {
+			return "";
+		}
+
+		String result = n.data.toString();
+		if (n.next != dummy) {
+			result += ", " + toString(n.next);
+		}
+
+		return result;
+	}
+
+
+	private static class Node<E> {
+		private E data;
+		private Node<E> next;
+
+		private Node(E data, Node<E> next) {
+			this.data = data;
+			this.next = next;
+		}
+	}
+
+	private class CiscLinkedListIterator implements Iterator<E> {
+		/**
+		 * A reference to the node containing the next element to return, or to the dummy node if there are no more
+		 * elements to return.
+		 */
+		private Node<E> nextNode;
+
+		/**
+		 * Constructs an iterator ready to return the first element in the list (if present).
+		 */
+		public CiscLinkedListIterator() {
+			nextNode = dummy.next;
+		}
+
+		/**
+		 * Returns {@code true} if the iteration has more elements. (In other words, returns {@code true} if
+		 * {@link #next} would return an element rather than throwing an exception.)
+		 *
+		 * @return {@code true} if the iteration has more elements
+		 */
+		@Override
+		public boolean hasNext() {
+			return nextNode != dummy;
+		}
+
+		/**
+		 * Returns the next element in the iteration.
+		 *
+		 * @return the next element in the iteration
+		 * @throws NoSuchElementException if the iteration has no more elements
+		 */
+		@Override
+		public E next() {
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			}
+			E data = nextNode.data;
+			nextNode = nextNode.next;
+			return data;
+		}
+	}
+}
