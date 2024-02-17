@@ -1,0 +1,335 @@
+package edu.ust.cisc;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+public class CiscQueue<E> implements CiscCollection<E> {
+    /**
+     * Default initial capacity of elementData.
+     */
+    public static final int DEFAULT_CAPACITY = 10;
+    /**
+     * The array into which the elements of the CiscQueue are stored.  The array is circular, in that elements are
+     * allowed to wrap around from index elementData.length-1 to index 0 according to their place in the queue.
+     */
+    private E[] elementData;
+    /**
+     * The index of the element at the front of this queue.
+     */
+    private int frontIndex;
+    /**
+     * The size of the CiscQueue (the number of elements it contains).
+     */
+    private int size;
+
+    /**
+     * Constructs an empty queue with an initial capacity of DEFAULT_CAPACITY.
+     */
+    public CiscQueue() {
+        frontIndex = -1;
+        size =0;
+        elementData = (E[]) new Object [DEFAULT_CAPACITY];
+    }
+
+    /**
+     * Constructs an empty queue with the specified initial capacity.
+     * Video: https://youtu.be/bUxBaxab50c
+     *
+     * @param  initialCapacity  the initial capacity of the queue
+     * @throws IllegalArgumentException if the specified initial capacity is negative
+     */
+    @SuppressWarnings("unchecked")
+    public CiscQueue(int initialCapacity) {
+        if (initialCapacity < 0) {
+            throw new IllegalArgumentException();
+        }
+        this.frontIndex = -1;
+        this.size = 0;
+        elementData = (E[]) new Object[initialCapacity];
+    }
+
+    /**
+     * Adds the specified element to the rear of this queue.  Calls ensureCapacity to allow reallocation if needed.
+     * The implementation should calculate rather than search for the index to store the element.
+     * Video: https://youtu.be/kGT9MPHqpYM
+     *
+     * @param item element to be added to this queue
+     * @return {@code true}
+     * @throws NullPointerException if the specified element is null
+     */
+    public boolean offer(E item) {
+        if (item == null) {
+            throw new NullPointerException();
+        }
+        ensureCapacity(size + 1);
+
+        if (size >= elementData.length) {
+            ensureCapacity(size + 1);
+        }
+        add(item);
+        return true;
+    }
+
+    /**
+     * Returns and removes the element at the front of the queue.  Returns null if this queue is empty.
+     * Video: https://youtu.be/Aw2_E7uCRo8
+     *
+     * @return the element at the front of the queue (or null if the queue is empty)
+     */
+    public E poll() {
+        if (isEmpty())
+            return null;
+
+        E data = elementData[frontIndex];
+        elementData[frontIndex] = null;
+        if (size > 1) {
+            if (frontIndex < elementData.length - 1) {
+                frontIndex ++;
+            } else {
+                frontIndex = 0;
+            }
+            size--;
+        } else {
+            clear();
+        }
+        return data;
+    }
+
+    /**
+     * Returns the element at the front of the queue.  Returns null if this queue is empty.
+     * Video: https://youtu.be/K4evcYbQIN4
+     *
+     * @return the element at the front of the queue (or null if the queue is empty)
+     */
+    public E peek() {
+        if (isEmpty()){
+            return null;
+        }
+        return elementData[frontIndex];
+    }
+
+    /**
+     * Returns the number of elements in this collection.
+     * Video: https://youtu.be/nVaX4ugM4cE
+     *
+     * @return the number of elements in this collection
+     */
+    @Override
+    public int size() {
+        return size;
+    }
+
+    /**
+     * Returns {@code true} if this collection contains no elements.
+     * Video: https://youtu.be/RqSFaRQRPe0
+     *
+     * @return {@code true} if this collection contains no elements
+     */
+    @Override
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
+    /**
+     * Returns {@code true} if this queue contains the specified element (compared using the {@code equals} method).
+     * This implementation should not evaluate more indices than necessary.
+     * Video: https://youtu.be/LqXyeWAki_0
+     *
+     * @param o element whose presence in this collection is to be tested
+     * @return {@code true} if this collection contains the specified element
+     * @throws NullPointerException if the specified element is null
+     */
+    @Override
+    public boolean contains(Object o) {
+        if (o == null) {
+            throw new NullPointerException();
+        }
+        int index = frontIndex;
+        for(int i = 0; i < size; i++) {
+            if (elementData[index].equals(o)) {
+                return true;
+            }
+            index = (index + 1) % elementData.length;
+        }
+        return false;
+    }
+
+
+    /**
+     * Adds the specified element to the rear of this queue. The implementation should calculate rather than search for
+     * the index to store the element.  See the {@code offer} operation.
+     * Video: https://youtu.be/kGT9MPHqpYM
+     *
+     * @param e element to be added to this queue
+     * @return {@code true}
+     * @throws NullPointerException if the specified element is null
+     */
+    @Override
+    public boolean add(E e) {
+        if (e == null) {
+            throw new NullPointerException();
+        }
+        int index;
+        if (frontIndex + size >= elementData.length) {
+            index = frontIndex + size - elementData.length;
+        } else {
+            index = frontIndex + size;
+        }
+
+        if (isEmpty()) {
+            index = 0;
+            frontIndex = 0;
+        }
+        elementData[index] = e;
+        size ++;
+        return true;
+    }
+
+    /**
+     * This operation is not supported by CiscQueue.
+     * Video: https://youtu.be/C9eHBqJhtaI
+     *
+     * @param o element to be removed from this collection, if present
+     * @return {@code true} if this collection contained the specified element
+     * @throws UnsupportedOperationException if the {@code remove} operation is not supported by this collection
+     */
+    @Override
+    public boolean remove(Object o) {
+        throw new UnsupportedOperationException();
+    }
+
+
+
+    /**
+     * Adds all elements in the specified collection to this collection, in the order that they are returned by the
+     * specified collection's iterator (optional operation).
+     * Video: https://youtu.be/Pyx84p7cIwA
+     *
+     * @param c collection containing elements to be added to this collection
+     * @return {@code true} if this collection changed as a result of the call
+     * @throws NullPointerException          if the specified collection is null
+     */
+    @Override
+    public boolean addAll(CiscCollection<? extends E> c) {
+        if (c == null) {
+            throw new NullPointerException("Collection cannot be null");
+        }
+
+        for (E element : c) {
+            offer(element);
+        }
+
+        return !c.isEmpty(); //not sure how this worked
+    }
+
+
+
+    /**
+     * Returns an iterator over the elements in this queue from front to rear.
+     * Video: https://youtu.be/531frtYcPWo
+     *
+     * @return an iterator over the elements in this queue from front to rear
+     */
+    @Override
+    public Iterator<E> iterator() {
+        return new CiscQueueIterator();
+    }
+
+    /**
+     * Returns an array containing all of the elements in this collection in proper sequence (from front to rear).
+     * Video: https://youtu.be/_iEavdzdtwI
+     *
+     * <p>The returned array will be "safe" in that no references to it are maintained by this collection.  (In other
+     * words, this method must allocate a new array even if this collection is backed by an array). The caller is thus
+     * free to modify the returned array.
+     *
+     * @return an array containing all of the elements in this collection in proper sequence
+     */
+    @Override
+    public Object[] toArray() {
+        Object[] result = new Object[size];
+        for (int i = 0; i < size; i++) {
+            int index = (frontIndex + i) % elementData.length;
+            result[i] = elementData[index];
+        }
+        return result;
+    }
+
+    /**
+     * Removes all of the elements from this collection. The collection will be empty after this call returns.  This
+     * implementation should not nullify more indices than necessary.
+     * Video: https://youtu.be/SKfH-5P2FcM
+     */
+    @Override
+    public void clear() {
+        for (int i = 0; i < size; i++) {
+            int index = (frontIndex + i) % elementData.length;
+            elementData[index] = null;
+        }
+        frontIndex = -1;
+        size = 0;
+    }
+
+    /**
+     * Ensures that the capacity of the underlying array is at least {@code minCapacity}. If not, the underlying array
+     * will be replaced with a new array whose capacity is either {@code minCapacity} or double the current capacity + 1
+     * (whichever is larger).  If the underlying array is replaced, the front element should be at index 0 and the rear
+     * element should be at index size-1.
+     * Video: https://youtu.be/idnDYLdKKDM
+     *
+     * @param minCapacity minimum capacity of the underlying array
+     */
+    private void ensureCapacity(int minCapacity) {
+        if (minCapacity > elementData.length) {
+            E[] temp;
+            if (minCapacity > elementData.length * 2 + 1) {
+                temp = (E[]) new Object[minCapacity];
+            } else {
+                temp = (E[]) new Object[elementData.length * 2 + 1];
+            }
+            int index = 0;
+            for (E data : this) {
+                temp[index] = data;
+                index ++;
+            }
+            elementData = temp;
+            frontIndex = 0;
+        }
+    }
+
+    private class CiscQueueIterator implements Iterator<E> {
+        /**
+         * Stores the number of elements returned by this iterator.
+         */
+        private int numElementsReturned;
+
+        /**
+         * Returns {@code true} if the iteration has more elements. (In other words, returns {@code true} if
+         * {@link #next} would return an element rather than throwing an exception.)
+         *
+         * @return {@code true} if the iteration has more elements
+         */
+        @Override
+        public boolean hasNext() {
+            return numElementsReturned < size;
+        }
+
+        /**
+         * Returns the next element in the iteration.
+         *
+         * @return the next element in the iteration
+         * @throws NoSuchElementException if the iteration has no more elements
+         */
+        @Override
+        public E next() {
+            if (!hasNext())
+                throw new NoSuchElementException();
+
+            int index = (frontIndex + numElementsReturned) % elementData.length;
+            E item = elementData[index];
+            numElementsReturned++;
+            return item;
+        }
+    }
+}
+
