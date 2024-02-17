@@ -1,0 +1,332 @@
+package edu.ust.cisc;
+
+import java.util.*;
+
+public class CiscTreeSet<E extends Comparable<E>> extends CiscAbstractSet<E> {
+    /**
+     * A reference to the root node of this tree set.
+     */
+    private CTSNode<E> root;
+
+    /**
+     * Returns the number of elements in this tree set.
+     *
+     * @return the number of elements in this tree set
+     */
+
+    /**
+     * Returns {@code true} if this tree set contains no elements.
+     *
+     * @return {@code true} if this tree set contains no elements
+     */
+
+
+    /**
+     * Removes all of the elements from this tree set. The tree set will be empty after this call returns.
+     */
+    @Override
+    public void clear() {
+        root = null;
+        size = 0;
+        /*Set the root node to null to remove all elements.
+         Reset the size to 0.*/
+    }
+
+    /**
+     * Returns {@code true} if this tree set contains the specified element (compared using the {@code equals} method).
+     * This implementation should stop searching as soon as it is able to determine that the specified element is not
+     * present, taking advantage of the structure of the binary search tree.
+     *
+     * @param o element whose presence in this list is to be tested
+     * @return {@code true} if this list contains the specified element
+     * @throws NullPointerException if the specified element is null
+     */
+    @Override
+    public boolean contains(Object o) {
+        if (o == null) {
+            throw new NullPointerException();
+        }
+        return contains (root, (E) o);
+    }
+
+    /**
+     * {@link #contains} recursive helper method.  Returns {@code true} if the node parameter contains the specified
+     * value.  Returns {@code false} if the search didn't find the specified value in a leaf node.  This implementation
+     * should stop searching as soon as it is able to determine that the specified element is not present, taking
+     * advantage of the structure of the binary search tree.
+     *
+     * @param node a reference to the node prior to the one possibly containing the value to remove
+     * @param value element to be removed from this list, if present
+     * @return {@code true} if the node parameter contains the specified value.  Returns {@code false} if the search
+     * didn't find the specified value in a leaf node
+     */
+    private boolean contains(CTSNode<E> node, E value) {
+        if (node == null) {
+            return false;
+        }
+
+        E nodeValue = node.data;
+
+        if (nodeValue.equals(value)) {
+            return true;
+        } else if (value.compareTo(nodeValue) < 0) {
+            return contains(node.left, value);
+        } else {
+            return contains(node.right, value);
+        }
+    }
+
+    /**
+     * Adds the specified element to its correct location in this tree set (if it is not already present).  This
+     * implementation should not call another method to determine whether the element is already present.  Assigns
+     * (often reassigns) the return value from the helper method as the root.
+     *
+     * @param value element to be added to this tree set
+     * @return {@code true} if the element was added to this set, or {@code false} if the element was already present
+     * @throws NullPointerException if the specified element is null
+     */
+    @Override
+    public boolean add(E value){
+        if (value == null) {
+            throw new NullPointerException();
+        }
+        int oldSize = size;
+        root = add(root, value);
+        return size > oldSize;
+    }
+    /**
+     * {@link #add} recursive helper method.  Generates and returns a new node containing the specified value if the
+     * place to add it has been found.  Otherwise, assigns (often reassigning) the result of a recursive call returning
+     * the left or right child of the node parameter, thus re-linking all nodes from the root down to the added node (if
+     * the specified value wasn't already present). If the specified value is found in the node parameter, this method
+     * has no effect on the tree set.
+     *lllllllllllllllllllllllllll
+     * @param node node on the path from the root to the place to add the new node. If null, the place to add the new
+     *             node has been found
+     * @param value element to be added to this tree set
+     * @return the node to assign as a child of its parent (often a reassignment)
+     */
+    private CTSNode<E> add(CTSNode<E> node, E value){
+        // we've found the place to add value
+        if (node == null) {
+            size ++;
+            return new CTSNode<E>(value);
+        }
+        //if it already exists
+        else if (node.data.equals(value)) {
+            return node; //give it right back
+        }
+        //continue search left
+        else if(value.compareTo(node.data) < 0) {
+            node.left = add(node.left, value);
+            return node;
+        }
+        //search right, must be bigger
+        else {
+            node.right = add(node.right, value);
+            return node;
+        }
+    }
+
+    /**
+     * Returns an array containing all of the elements in this tree set positioned according to an in order traversal.
+     *
+     * <p>The returned array will be "safe" in that no references to it are maintained by this list.  (In other words,
+     * this method must allocate a new array even if this list is backed by an array). The caller is thus free to modify
+     * the returned array.
+     *
+     * @return an array containing all of the elements in this tree set positioned according to an in order traversal
+     */
+    @Override
+    public Object[] toArray(){
+        List<E> resultList = new ArrayList<>(size);
+        toArray(root, resultList);
+        return resultList.toArray();
+    }
+
+
+    /**
+     * {@link #toArray} recursive helper method. Recursively performs an in order traversal.  Adds the element in its
+     * node parameter to the end of the list parameter after processing the left subtree and before processing the right
+     * subtree.  After the original call has finished, the list parameter should contain all elements in the tree
+     * (rooted by the initial call's node argument) in order.
+     *
+     * @param node the root of the subtree on which to perform an in order traversal
+     * @param aList the list to which the data in the provided node should be added
+     */
+    private void toArray(CTSNode<E> node, List<E> aList) {
+        if (node != null) {
+            toArray(node.left, aList);
+            aList.add(node.data);
+            toArray(node.right, aList);
+        }
+    }
+
+    /**
+     * Removes the specified element from this tree set, if it is present.  If this tree set does not contain the
+     * element, the tree set is unchanged. Returns {@code true} if this tree set contained the specified element,
+     * {@code false} otherwise.  This implementation should not call another method to determine whether the element is
+     * already present.
+     *
+     * <p>If the element is found in a leaf node, its incoming link should be replaced with null.  If the element is
+     * found in a node with one child, its incoming link should be replaced with a link to the one child.  If the
+     * element is found in a node with two children, that node's data should be replaced with the data in that node's
+     * in order predecessor node, and the in order predecessor node should be removed.</p>
+     *
+     * @param value element to be removed from this set, if present
+     * @return {@code true} if this set contained the specified element, {@code false} otherwise
+     * @throws NullPointerException if the specified element is null
+     */
+    @Override
+    public boolean remove(Object value){
+        if (value == null) {
+            throw new NullPointerException();
+        }
+        int initialSize = size;
+        root = remove(root, (E) value);
+        return size < initialSize;
+    }
+
+    /**
+     * {@link #remove} recursive helper method.  If the node parameter contains the specified value, that value is
+     * removed according to the logic described in {@link #remove}.  Returns {@code null} if the specified value is not
+     * found in the tree set (determined using the node parameter).  Otherwise, assigns (often reassigning) the result
+     * of a recursive call returning the left or right child of the node parameter, thus re-linking all nodes from the
+     * root down to the child of the removed node (if any).
+     *
+     * @param node node on the path from the root to the node containing the element to remove (if present)
+     * @param value element to remove
+     * @return the node to assign as a child of its parent (often a reassignment)
+     */
+    private CTSNode<E> remove(CTSNode<E> node, E value){
+        if (node == null) {
+            return null;
+        }
+
+        int compare = value.compareTo(node.data);
+
+        if (compare < 0) {
+            // value in left sub
+            node.left = remove(node.left, value);
+        } else if (compare > 0) {
+            // value in the right sub
+            node.right = remove(node.right, value);
+        } else {
+            // value is found
+            if (node.left == null) {
+                // right child or no children
+                size--;
+                return node.right;
+            } else if (node.right == null) {
+                // only left child
+                size--;
+                return node.left;
+            } else {
+                // both left and right
+
+                CTSNode<E> maxNode = findMax(node.left);
+
+                node.data = maxNode.data;
+                // remove that max
+                node.left = remove(node.left, maxNode.data);
+
+            }
+        }
+        return node;
+    }
+
+    private CTSNode<E> findMax(CTSNode<E> node) {
+        while (node.right != null) {
+            node = node.right;
+        }
+        return node;
+    }
+
+    /**
+     * Returns an iterator over the elements in this tree set according to an in-order traversal.
+     *
+     * @return an iterator over the elements in this tree set according to an in-order traversal
+     */
+    @Override
+    public Iterator<E> iterator()  {
+        return new CiscTreeSetIterator<>(root);
+    }
+
+
+    private static class CiscTreeSetIterator<E> implements Iterator<E> {
+        /**
+         * A stack to help with the in order traversal. The node at the top of the stack should contain the data that
+         * will be returned by a call to the next() method.
+         */
+        private Stack<CTSNode<E>> stack;
+
+        /**
+         * Pushes the node parameter onto the stack, followed by its left child (if present), followed by that node's
+         * left child (if present), and so on, resulting with the node containing the smallest value in the tree at the
+         * top of the stack.
+         *
+         * @param node the root of the tree (or subtree) over which to iterate
+         */
+        public CiscTreeSetIterator(CTSNode<E> node) {
+            stack = new Stack<>();
+            while (node != null) {
+                stack.push(node);
+                node = node.left;
+            }
+        }
+
+        /**
+         * Returns {@code true} if the iterator has elements yet to be returned, {@code false} otherwise.  Uses the
+         * stack to determine if there are elements yet to be returned.
+         *
+         * @return {@code true} if the iterator has elements yet to be returned, {@code false} otherwise.
+         */
+        @Override
+        public boolean hasNext() {
+            return !stack.isEmpty();
+        }
+
+        /**
+         * Returns the next element in the iteration, which should be contained in the node at the top of the stack (if
+         * present).  Prepares the stack for future usage of this iterator by popping the node at the top of the stack,
+         * pushing the popped node's right child (if present), then pushing that right child's left child (if present),
+         * followed by that node's left child (if present), and so on, resulting with the node containing the smallest
+         * unreturned value in the tree at the top of the stack.
+         *
+         * @return the next element in the iteration
+         * @throws NoSuchElementException if the iteration has no more elements
+         */
+        @Override
+        public E next() {
+            if(!hasNext()) throw new NoSuchElementException();
+            if(stack.isEmpty()) return null;
+            CTSNode<E> dat = stack.pop();
+
+            CTSNode<E> temp = dat.right;
+            while(temp != null)
+            {
+                stack.push(temp);
+                temp = temp.left;
+            }
+            return dat.data;
+        }
+    }
+
+
+    private static class CTSNode<E> {
+        private E data;
+        private CTSNode<E> left;
+        private CTSNode<E> right;
+
+        public CTSNode(E data) {
+            this(data, null, null);
+        }
+
+        public CTSNode(E data, CTSNode<E> left, CTSNode<E> right) {
+            this.data = data;
+            this.left = left;
+            this.right = right;
+        }
+    }
+}
+
