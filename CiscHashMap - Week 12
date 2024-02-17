@@ -1,0 +1,494 @@
+package edu.ust.cisc;
+
+import java.util.*;
+
+/**
+ * This class implements a map using a hash table as its underlying data structure.  Chaining is used to handle
+ * collisions.  Newly added entries are added to the end of the chain at the index to which they hashed.
+ */
+public class CiscHashMap <K, V> implements Map<K, V> {
+
+    /**
+     * Underlying array into which map entries are hashed according to their keys
+     */
+    private CiscEntry<K,V>[] elementData;
+    /**
+     * Number of entries in this map
+     */
+    private int size;
+    /**
+     * Initial underlying array capacity if none is provided
+     */
+    private static final int DEFAULT_CAPACITY = 11;
+    /**
+     * Load factor threshold for rehashing
+     */
+    private static final double MAX_LOAD_FACTOR = 0.75;
+
+
+    public CiscHashMap() {
+        this.elementData = new CiscEntry[DEFAULT_CAPACITY];
+    }
+
+    /**
+     * Returns the number of entries in this map.
+     * Video: https://codesmell.org/spock/lecture/1130
+     *
+     * @return the number of entries in this map
+     */
+    @Override
+    public int size() {
+        return size;
+    }
+
+    /**
+     * Returns {@code true} if this map contains no entries.
+     * Video: https://codesmell.org/spock/lecture/1124
+     *
+     * @return {@code true} if this map contains no entries
+     */
+    @Override
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
+    /**
+     * Returns {@code true} if this map contains a mapping for the specified key.  More formally, returns {@code true}
+     * if and only if this map contains a mapping for a key {@code k} such that {@code Objects.equals(key, k)}.  (There
+     * can be at most one such mapping.)  Your implementation should use the hashFunction to identify the index at which
+     * to look for the provided key.
+     * Video: https://codesmell.org/spock/lecture/1120
+     *
+     * @param key key whose presence in this map is to be tested
+     * @return {@code true} if this map contains a mapping for the specified key
+     * @throws NullPointerException if the specified key is null
+     */
+    @Override
+    public boolean containsKey (Object key) {
+        if (key == null) {
+            throw new NullPointerException();
+        }
+        int index = hashFunction(key);
+        CiscEntry<K, V> entry = elementData[index];
+
+        while (entry != null) {
+            if (Objects.equals(key, entry.getKey())){
+                return true;
+            }
+            entry = entry.next;
+        }
+        return false;
+    }
+    /**
+     * Returns {@code true} if this map maps one or more keys to the specified value.  More formally, returns {@code
+     * true} if and only if this map contains at least one mapping to a value {@code v} such that {@code
+     * Objects.equals(value, v)}.  This operation will probably require time linear in the map size for most
+     * implementations of the {@code Map} interface.
+     * Video: https://codesmell.org/spock/lecture/1121
+     *
+     * @param value value whose presence in this map is to be tested
+     * @return {@code true} if this map maps one or more keys to the specified value
+     * @throws NullPointerException if the specified value is null
+     */
+    @Override
+    public boolean containsValue(Object value) {
+        if (value == null) {
+            throw new NullPointerException();
+        }
+
+        for (CiscEntry<K, V> entry : elementData) {
+            while (entry != null) {
+                if (Objects.equals(value, entry.getValue())){
+                    return true;
+                }
+                entry = entry.next;
+            }
+        }
+        return false;
+    }
+
+
+    /**
+     * Returns the value to which the specified key is mapped, or {@code null} if this map contains no mapping for the
+     * key.  Your implementation should not search more than once for a given key, and should use the result of the
+     * hashFunction to begin its search.
+     * Video: https://codesmell.org/spock/lecture/1123
+     *
+     * <p>More formally, if this map contains a mapping from a key {@code k} to a value {@code v} such that {@code
+     * Objects.equals(key, k)}, then this method returns {@code v}; otherwise it returns {@code null}.  (There can be at
+     * most one such mapping.)
+     *
+     * @param key the key whose associated value is to be returned
+     * @return the value to which the specified key is mapped, or {@code null} if this map contains no mapping for the
+     * key
+     * @throws NullPointerException if the specified key is null
+     */
+
+    @Override
+    public V get (Object key) {
+        if (key == null) {
+            throw new NullPointerException();
+        }
+
+        int index = hashFunction(key);
+        CiscEntry<K, V> entry = elementData[index];
+        while (entry != null) {
+            if (Objects.equals(key, entry.getKey())){
+                return entry.getValue();
+            }
+            entry = entry.next;
+        }
+        return null;
+    }
+    /**
+     * Associates the specified value with the specified key in this map.  If the map previously contained a mapping for
+     * the key, the old value is replaced by the specified value.  Rehashes all entries if a new entry will be added
+     * (i.e. the provided key is not already present in the map) and the load factor will reach the threshold once the
+     * new entry is added (I may have said this incorrectly in the video).  Your implementation should not evaluate any
+     * entry more than once, and should use the result of the hashFunction to begin its search for the place to
+     * potentially put the key value pair.
+     * Video: https://codesmell.org/spock/lecture/1126
+     *
+     * @param key   key with which the specified value is to be associated
+     * @param value value to be associated with the specified key
+     * @return the previous value associated with {@code key}, or {@code null} if there was no mapping for {@code key}.
+     * @throws NullPointerException ;;        if the specified key or value is null
+     */
+    @Override
+    public V put(K key, V value) {
+        if (key == null || value == null) {
+            throw new NullPointerException();
+        }
+
+        int index = hashFunction(key);
+        CiscEntry<K, V> entry = elementData[index];
+
+        if (entry == null) {
+            elementData[index] = new CiscEntry<>(key, value);
+            size++;
+            if ((double) size / elementData.length > MAX_LOAD_FACTOR) {
+                rehash();
+            }
+            return null;
+        }
+
+        CiscEntry<K, V> prev = null;
+        while (entry != null) {
+            if (Objects.equals(key, entry.getKey())) {
+                V oldValue = entry.getValue();
+                entry.setValue(value);
+                return oldValue;
+            }
+            prev = entry;
+            entry = entry.next;
+        }
+
+        prev.next = new CiscEntry<>(key, value);
+        size++;
+        if ((double) size / elementData.length > MAX_LOAD_FACTOR) {
+            rehash();
+        }
+        return null;
+    }
+    /**
+     * Removes the mapping for a key from this map if it is present. More formally, if this map contains a mapping from
+     * key {@code k} to value {@code v} such that {@code Objects.equals(key, k)}, that mapping is removed.  (The map can
+     * contain at most one such mapping.)  Your implementation should not search more than once for a given key, and
+     * should use the result of the hashFunction to begin its search for the place to potentially put the key value
+     * pair.
+     * Video: https://codesmell.org/spock/lecture/1129
+     *
+     * <p>Returns the value to which this map previously associated the key, or {@code null} if the map contained no
+     * mapping for the key.
+
+     * <p>The map will not contain a mapping for the specified key once the call returns.
+     *
+     * @param key key whose mapping is to be removed from the map
+     * @return the previous value associated with {@code key}, or {@code null} if there was no mapping for {@code key}.
+     * @throws NullPointerException          if the specified key is null
+     */
+    @Override
+    public V remove(Object key) {
+        if (key == null) {
+            throw new NullPointerException();
+        }
+
+        int index = hashFunction(key);
+        CiscEntry<K, V> entry = elementData[index];
+        CiscEntry<K, V> prev = null;
+
+        while (entry != null) {
+            if (Objects.equals(key, entry.getKey())) {
+                if (prev == null) {
+                    elementData[index] = entry.next;
+                } else {
+                    prev.next = entry.next;
+                }
+                size--;
+                return entry.getValue();
+            }
+            prev = entry;
+            entry = entry.next;
+        }
+
+        return null;
+    }
+
+    /**
+     * Copies all of the mappings from the specified map to this map.  The effect of this call is equivalent to that of
+     * calling {@link #put(K, V) put(k, v)} on this map once for each mapping from key {@code k} to value
+     * {@code v} in the specified map.
+     * Video: https://codesmell.org/spock/lecture/1127
+     *
+     * @param m mappings to be stored in this map
+     * @throws NullPointerException          if the specified map is null
+     */
+    @Override
+    public void putAll(Map<? extends K, ? extends V> m) {
+        for (Map.Entry<? extends K, ? extends V> entry : m.entrySet()) {
+            put(entry.getKey(), entry.getValue());
+        }
+    }
+
+    /**
+     * Removes all of the entries from this map.  Replaces elementData with a new array with the default capacity.  The
+     * map will be empty after this call returns.
+     * Video: https://codesmell.org/spock/lecture/1119
+     */
+    @Override
+    public void clear() {
+        elementData = new CiscEntry[DEFAULT_CAPACITY];
+        size = 0;
+    }
+
+
+        /**
+         * Returns a {@link Set} containing all of the keys in this map.  Your implementation may call the entrySet method
+         * and iterate over its return value, adding each key to a returned set.
+         * Video: https://codesmell.org/spock/lecture/1125
+         *
+         * @return a set containing all of the keys contained in this map
+         */
+        @Override
+        public Set<K> keySet() {
+            Set<K> keySet = new HashSet<>();
+
+            for (CiscEntry<K, V> entry : elementData) {
+                while (entry != null) {
+                    keySet.add(entry.getKey());
+                    entry = entry.next;
+                }
+            }
+
+            return keySet;
+        }
+
+    /**
+     * Returns a {@link Collection} containing all of the values in this map.  Your implementation may call the entrySet
+     * method and iterate over its return value, adding each value to a returned collection.
+     * Video: https://codesmell.org/spock/lecture/1131
+     *
+     * @return a collection containing all of the values in this map
+     */
+    @Override
+    public Collection<V> values() {
+        List<V> values = new ArrayList<>();
+
+        for (CiscEntry<K, V> entry : elementData) {
+            while (entry != null) {
+                values.add(entry.getValue());
+                entry = entry.next;
+            }
+        }
+
+        return values;
+    }
+    /**
+     * Returns a {@link Set} view of the entries contained in this map.  The set is backed by the map, so changes to
+     * the map are reflected in the set, and vice-versa.
+     * Video: https://codesmell.org/spock/lecture/1122
+     *
+     * @return a set view of the entries contained in this map
+     */
+    @Override
+    public Set<Entry<K, V>> entrySet() {
+        return new CiscEntrySet();
+    }
+
+    /**
+     * Replaces elementData with a new array having twice the capacity + 1, and rehashes all existing entries into the
+     * new larger elementData.  Your implementation may call the put(K, V) method when rehashing elements.
+     * Video: https://codesmell.org/spock/lecture/1128
+     */
+    private void rehash() {
+        int newCapacity = elementData.length * 2 + 1;
+        CiscEntry<K, V>[] newElementData = new CiscEntry[newCapacity];
+
+        for (CiscEntry<K, V> entry : elementData) {
+            while (entry != null) {
+                int newIndex = hashFunction(entry.getKey(), newCapacity);
+                CiscEntry<K, V> next = entry.next;
+                entry.next = newElementData[newIndex];
+                newElementData[newIndex] = entry;
+                entry = next;
+            }
+        }
+
+        elementData = newElementData;
+    }
+
+    /**
+     * Identifies the elementData index into which the specified key should be placed.
+     *
+     * @param o key to hash
+     * @return elementData index into which the specified key should be placed
+     */
+    private int hashFunction(Object o) {
+        return hashFunction(o, elementData.length);
+    }
+
+    private int hashFunction(Object o, int capacity) {
+        if (o == null) {
+            throw new NullPointerException();
+        }
+        return Math.abs(o.hashCode() % capacity);
+    }
+
+    /**
+     * Creates a {@link Set} view of the entries contained in this map.  The set is backed by the map, so changes to
+     * the map are reflected in the set, and vice-versa.
+     */
+    private class CiscEntrySet extends AbstractSet<Entry<K, V>> {
+
+        @Override
+        public Iterator<Entry<K, V>> iterator() {
+            return new CiscEntrySetIterator();
+        }
+
+        @Override
+        public int size() {
+            return size;
+        }
+
+        /**
+         * Creates an iterator to iterate over the entries in this set (which are, in turn, the entries contained in
+         * the map backed by this set).
+         */
+        private class CiscEntrySetIterator implements Iterator<Map.Entry<K, V>> {
+
+            /**
+             * Refers to the entry that will be returned by a call to the next method.
+             */
+            private CiscEntry <K, V> nextEntry;
+
+            public CiscEntrySetIterator() {
+                for (CiscEntry<K, V> entry : elementData) {
+                    if (entry != null) {
+                        nextEntry = entry;
+                        break;
+                    }
+                }
+            }
+
+            /**
+             * Returns {@code true} if the iteration has more elements.  (In other words, returns {@code true} if
+             * {@link #nextEntry} would return an entry rather than throwing an exception.)
+             *
+             * @return {@code true} if the iteration has more elements
+             */
+            @Override
+            public boolean hasNext() {
+                return nextEntry != null;
+            }
+
+            /**
+             * Returns the next element in the iteration.
+             *
+             * @return the next element in the iteration
+             * @throws NoSuchElementException if the iteration has no more elements
+             */
+            @Override
+            public Entry<K, V> next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+
+                CiscEntry<K, V> currentEntry = nextEntry;
+                if(nextEntry.next != null) {
+                    nextEntry = nextEntry.next;
+                } else {
+                    int currentIndex = hashFunction(currentEntry.getKey(), elementData.length);
+                    nextEntry = null;
+                    for (int i = currentIndex + 1; i < elementData.length; i++ ) {
+                        if (elementData[i] != null) {
+                            nextEntry = elementData[i];
+                            break;
+                        }
+                    }
+                }
+                return currentEntry;
+            }
+        }
+    }
+
+//                if (!hasNext()) {
+//                    throw new NoSuchElementException();
+//                }
+//
+//                CiscEntry<K, V> currentEntry = nextEntry;
+//                nextEntry = nextEntry.next;
+//                return currentEntry;
+//            }
+//        }
+//    }
+    /**
+     * A class to model entries stored in this map.
+     */
+    private static class CiscEntry<K,V> implements Map.Entry<K, V> {
+        private K key;
+        private V value;
+        /**
+         * A reference to the next entry hashed to the same index as this entry (or null if no more entries follow this
+         * one in the hash bucket).
+         */
+        private CiscEntry<K,V> next;
+
+        public CiscEntry(K key, V value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        @Override
+        public K getKey() {
+            return key;
+        }
+
+        @Override
+        public V getValue() {
+            return value;
+        }
+
+        /**
+         * Replaces this entry's value with the provided value and returns the value previously contained in this entry.
+         * @param value new value to be stored in this entry
+         * @return the value previously contained in this entry
+         */
+        @Override
+        public V setValue(V value) {
+            V oldValue = this.value;
+            this.value = value;
+            return oldValue;
+        }
+
+        @Override
+        public String toString() {
+            String entryString = "["+key.toString() + " : " + value.toString()+"]";
+            if(next == null) {
+                return entryString;
+            } else {
+                return entryString + " -> " + next.toString();
+            }
+        }
+    }
+}
+
