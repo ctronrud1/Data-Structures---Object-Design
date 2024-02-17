@@ -1,0 +1,413 @@
+package edu.ust.cisc;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+/**
+ * This CiscHashSet implements a hash set using linear probing to handle collisions.  It does not allow REMOVED
+ * placeholders to be overwritten and must consider them as occupied indices when calculating the load factor, which is
+ * equal to (numElements + numRemoved) / elementData.length
+ *
+ * @param <E> type of object stored in this hash set
+ */
+public class CiscHashSet<E> implements CiscSet<E> {
+    /**
+     * Threshold for refactoring (numElements + numRemoved) / elementData.length)
+     */
+    private static final double MAX_LOAD_FACTOR = 0.75;
+    /**
+     * The array into which the elements of the CiscHashSet are stored
+     */
+    private Object[] elementData;
+    /**
+     * Number of elements contained in this CiscHashSet
+     */
+    private int numElements;
+    /**
+     * Number of REMOVED placeholders present in this CiscHashSet
+     */
+    private int numRemoved;
+    /**
+     * REMOVED placeholder to replace removed elements
+     */
+    private static final Object REMOVED = new Object() {
+        @Override
+        public String toString() {
+            return "R";
+        }
+    };
+
+    /**
+     * Constructs an empty CiscHashSet with an initial capacity of 11.
+     */
+    public CiscHashSet() {
+        elementData = (E[]) new Object[11];
+        numElements = 0;
+        numRemoved = 0;
+    }
+
+    /**
+     * Returns the number of elements in this CiscHashSet.
+     * Video: https://codesmell.org/spock/lecture/1023
+     *
+     * @return the number of elements in this CiscHashSet
+     */
+    @Override
+    public int size() {
+        return numElements;
+    }
+
+    /**
+     * Returns {@code true} if this CiscHashSet contains no elements.
+     * Video: https://codesmell.org/spock/lecture/1019
+     *
+     * @return {@code true} if this CiscHashSet contains no elements
+     */
+    @Override
+    public boolean isEmpty() {
+        return numElements == 0;
+    }
+
+    /**
+     * Removes all of the elements from this CiscHashSet. The set will be empty after this call returns.  Rather than
+     * searching for and nullifying elements/REMOVED placeholders, this implementation should replace elementData with
+     * a new array with a capacity of 11.
+     * Video: https://codesmell.org/spock/lecture/1017
+     */
+    @Override
+    public void clear() {
+        elementData = (E[]) new Object[11];
+        numElements = 0;
+        numRemoved = 0;
+    }
+
+    /**
+     * Returns {@code true} if this CiscHashSet contains the specified element (compared using the {@code equals}
+     * method). This implementation should not evaluate more indices than necessary.
+     * Video: https://codesmell.org/spock/lecture/1018
+     *
+     * @param value element whose presence in this set is to be tested
+     * @return {@code true} if this set contains the specified element
+     * @throws NullPointerException if the specified element is null
+     */
+    @Override
+    public boolean contains(Object value) {
+        if (value == null) {
+            throw new NullPointerException();
+        }
+        int index = hashFunction(value);
+
+        while (elementData[index] != null && !elementData[index].equals(value)) {
+            index = (index + 1) % elementData.length;
+        }
+
+        return elementData[index] != null && !elementData[index].equals(REMOVED);
+    }
+
+
+
+
+
+    /**
+     * Returns an iterator over the elements in this set from smallest index to largest index.
+     * Video: https://codesmell.org/spock/lecture/1020
+     *
+     * @return an iterator over the elements in this queue from smallest index to largest index
+     */
+    @Override
+    public Iterator<E> iterator() {
+        return new CiscHashSetIterator();
+    }
+
+    /**
+     * Returns an array containing all elements in this set in proper sequence (from smallest index to largest index).
+     * Video: https://codesmell.org/spock/lecture/1024
+     *
+     * <p>The returned array will be "safe" in that no references to it are maintained by this collection.  (In other
+     * words, this method must allocate a new array even if this collection is backed by an array). The caller is thus
+     * free to modify the returned array.
+     *
+     * @return an array containing all elements in this set in proper sequence (from smallest index to largest index)
+     */
+    @Override
+    public Object[] toArray() {
+        Object [] array = new Object[numElements];
+        int arrayIndex = 0;
+        for (Object element : elementData) {
+            if (element != null && element != REMOVED) {
+                array[arrayIndex++] = element;
+            }
+        }
+        return array;
+    }
+
+
+
+    /**
+     * Adds the specified element to this CiscHashSet using the hash function to identify an initial index. Linear
+     * probing should be used to handle collisions.  This implementation should not overwrite any REMOVED placeholders.
+     * A rehash should occur only when a new value is being added and the load factor is already met before the element
+     * is added.  Your implementation should not call contains (or search twice for the element location).
+     *
+     * @param value element to be added to this set
+     * @return {@code true} if the element was added, {@code false} otherwise
+     * @throws NullPointerException if the specified element is null
+     */
+    /*public boolean add(E value) {
+        if (value == null) {
+            throw new NullPointerException();
+        }
+
+        // Check if rehash is needed
+        if ((double) (numElements + numRemoved) / elementData.length > MAX_LOAD_FACTOR) {
+            rehash();
+        }
+
+        int hashCode = value.hashCode() % elementData.length;
+
+        if (hashCode < 0) {
+            hashCode += elementData.length; // Ensure index is non-negative
+        }
+
+        int index = hashCode;
+
+        // Handle collisions by linear probing
+        while (elementData[index] != null && !elementData[index].equals(REMOVED) && !elementData[index].equals(value)) {
+            index = (index + 1) % elementData.length;
+        }
+
+        // Continue probing until an available slot is found
+        while (elementData[index] != null && !elementData[index].equals(REMOVED)) {
+            index = (index + 1) % elementData.length;
+        }
+
+        if (elementData[index] == null || elementData[index].equals(REMOVED)) {
+            elementData[index] = value;
+            numElements++;
+            return true;
+        } else if (elementData[index].equals(value)) {
+            return false; // Element already exists
+        }
+
+        return false;
+    }*/
+
+    public boolean add(E value) {
+        if (value == null) {
+            throw new NullPointerException();
+        }
+
+        int index = value.hashCode() % elementData.length;
+        if (index < 0) {
+            index += elementData.length; //its non negative
+        }
+
+        if (elementData[index] != value && (double) (numElements + numRemoved) / elementData.length >= MAX_LOAD_FACTOR) {
+            rehash(); //logic behind rehash^
+            index = value.hashCode() % elementData.length;
+            if (index < 0) {
+                index += elementData.length; //same thing
+            }
+        }
+
+        if (elementData[index] != REMOVED && elementData[index] == null) {
+            elementData[index] = value;
+            numElements++;
+            return true;
+        }
+
+        while (elementData[index] != null && elementData[index] != value) {
+            index = (index + 1) % elementData.length;
+
+            if (elementData[index] == null && elementData[index] != REMOVED) {
+                elementData[index] = value;
+                numElements++;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+
+
+
+
+    //        while (elementData[index] != null && !elementData[index].equals(REMOVED)) {
+//            if (elementData[index].equals(value)) {
+//                return false; //its there, no adding done
+//            }
+//            index = (index + 1) % elementData.length;
+//        }
+
+    /**
+     * Removes the specified element from this CiscHashSet (if present) by replacing it with a REMOVED placeholder.
+     * This implementation should not evaluate more indices than necessary. Your implementation should not call contains
+     * (or search twice for the element location).
+     * Video: https://codesmell.org/spock/lecture/1022
+     *
+     * @param value element to be removed from this set, if present
+     * @return {@code true} if this set contained the specified element, {@code false} otherwise
+     * @throws NullPointerException          if the specified element is null
+     */
+    public boolean remove(Object value) {
+        if (value == null) {
+            throw new NullPointerException();
+        }
+
+        int hashCode = value.hashCode();
+        int index = hashCode % elementData.length;
+
+        // finding the element index
+        while (elementData[index] != null) {
+            if (elementData[index].equals(value) && !elementData[index].equals(REMOVED)) {
+                elementData[index] = REMOVED;
+                numElements--;
+                numRemoved++;
+                return true;
+            }
+            index = (index + 1) % elementData.length;  //next
+        }
+
+        return false;
+    }
+
+
+    /**
+     * Returns a string representation of this CiscHashSet.  This string should consist of a comma separated list of
+     * values contained in this set, from smallest index to largest index, surrounded by square brackets.  It should
+     * contain any REMOVED placeholders or null values.
+     * (examples: [3, 6, 7] and []).
+     * Video: https://codesmell.org/spock/lecture/1025
+     *
+     * @return a string representation of this set
+     */
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder("[");
+
+        boolean first = true;
+
+        for (Object element : elementData) {
+            if (element != null && !element.equals(REMOVED)) {
+                if (!first) {
+                    result.append(", ");
+                }
+                result.append(element.toString());
+                first = false;
+            }
+        }
+
+        result.append("]");
+        return result.toString();
+    }
+
+
+
+    /**
+     * Identifies the elementData index into which the specified element should be placed (assuming no collisions).
+     *
+     * @param value element to hash
+     * @return elementData index into which the specified element should be placed (assuming no collisions)
+     */
+    private int hashFunction(Object value) {
+        return Math.abs(value.hashCode()) % elementData.length;
+    }
+
+    /**
+     * Replaces elementData with a new array having twice the capacity + 1, and rehashes all existing elements into the
+     * new larger elementData.  All REMOVED placeholders and null values should be ignored.  Your implementation may
+     * call the add(E) method when rehashing elements.
+     * Video: https://codesmell.org/spock/lecture/1021
+     */
+    private void rehash() {
+        E[] oldData = (E[]) elementData;
+        elementData = (E[]) new Object[(2 * elementData.length) + 1];
+        numElements = 0;
+
+        for (int i = 0; i < oldData.length; i++) {
+            if (oldData[i] != null && oldData[i] != REMOVED) {
+                add (oldData[i]);
+            }
+        }
+        numRemoved = 0;
+    }
+/*for (Object element : oldData) {
+        if (element != null && element != REMOVED) {
+            add((E) element);
+        }*/
+
+    private class CiscHashSetIterator implements Iterator<E> {
+        /**
+         * Stores the index of the next element to be returned by this iterator.
+         */
+        private int nextIndex = -1;
+
+        /**
+         * Constructs a CiscHashSetIterator instance, setting the value of nextIndex to store the index of the first
+         * element to be returned by this iterator (if present).
+         */
+        public CiscHashSetIterator() {
+            for (int i = 0; i < elementData.length; i++) {
+                if (elementData[i] != null && !elementData[i].equals(REMOVED)) {
+                    nextIndex = i;
+                    return;
+                }
+            }
+
+            //reset at -1 if none found
+            nextIndex = -1;
+        }
+
+
+
+        /**
+         * Returns {@code true} if the iteration has more elements. (In other words, returns {@code true} if
+         * {@link #next} would return an element rather than throwing an exception.)
+         *
+         * @return {@code true} if the iteration has more elements
+         */
+        @Override
+        public boolean hasNext() {
+            return nextIndex != -1;
+        }
+
+        /**
+         * Returns the next element in the iteration and updates nextIndex to prepare for subsequent use of this
+         * iterator.
+         *
+         * @return the next element in the iteration
+         * @throws NoSuchElementException if the iteration has no more elements
+         */
+//        public E next() {
+//            while (nextIndex < elementData.length) {
+//                E element = (E) elementData[nextIndex++];
+//                if (element != null && element != REMOVED) {
+//                    return element;
+//                }
+//            }
+//            throw new NoSuchElementException();
+//        }
+        @Override
+        public E next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+
+            E element = (E) elementData[nextIndex];
+
+            // Find the next non-null, non-REMOVED element index
+            for (int i = nextIndex + 1; i < elementData.length; i++) {
+                if (elementData[i] != null && !elementData[i].equals(REMOVED)) {
+                    nextIndex = i;
+                    return element;
+                }
+            }
+
+            // Reset to -1 if no more elements are found
+            nextIndex = -1;
+            return element;
+        }
+    }
+}
