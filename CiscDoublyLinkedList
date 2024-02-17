@@ -1,0 +1,417 @@
+package edu.ust.cisc;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+/**
+ * This class implements an acyclic (non-cyclic), doubly-linked list.
+ * @param <E>
+ */
+public class CiscDoublyLinkedList<E> implements CiscList<E> {
+
+	/**
+	 * A reference to the first node in the list (or null if list is empty).
+	 */
+	private Node<E> head;
+	/**
+	 * A reference to the last node int the list (or null if list is empty).
+	 */
+	private Node<E> tail;
+	/**
+	 * Number of elements in the list.
+	 */
+	private int size;
+
+
+	/**
+	 * Returns the number of elements in this list.
+	 * Video: https://youtu.be/SEEHTGetnZE
+	 *
+	 * @return the number of elements in this list
+	 */
+	@Override
+	public int size() {
+		return size;
+	}
+
+	/**
+	 * Returns {@code true} if this list contains no elements.
+	 * Video: https://youtu.be/WUPu2bf_DJg
+	 *
+	 * @return {@code true} if this list contains no elements
+	 */
+	@Override
+	public boolean isEmpty() {
+		return size == 0;
+	}
+
+	/**
+	 * Returns {@code true} if this list contains the specified element (compared using the {@code equals} method).
+	 * Video: https://youtu.be/BKMV2NzZRsg
+	 *
+	 * @param o element whose presence in this list is to be tested
+	 * @return {@code true} if this list contains the specified element
+	 * @throws NullPointerException if the specified element is null
+	 */
+	@Override
+	public boolean contains(Object o) {
+		if (o == null) {
+			throw new NullPointerException("Specified element is null");
+		}
+
+		Node<E> current = head;
+
+		while (current != null) {
+			if (current.data.equals(o)) {
+				return true;
+			}
+			current = current.next;
+		}
+
+		return false;
+	}
+
+
+	/**
+	 * Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not
+	 * contain the element (compared using the {@code equals} method).
+	 * Video: https://youtu.be/D-ozkhRxKVw
+	 *
+	 * @param o element to search for
+	 * @return the index of the first occurrence of the specified element in this list, or -1 if this list does not
+	 * contain the element
+	 * @throws NullPointerException if the specified element is null
+	 */
+	@Override
+	public int indexOf(Object o) {
+		if (o == null) {
+			throw new NullPointerException("Specified element is null");
+		}
+
+		Node<E> current = head;
+		int index = 0;
+
+		while (current != null) {
+			if (current.data.equals(o)) {
+				return index;
+			}
+			current = current.next;
+			index++;
+		}
+
+		return -1;
+	}
+
+	/**
+	 * Removes all of the elements from this list. The list will be empty after this call returns.
+	 * Video: https://youtu.be/ofHNOPrd32k
+	 */
+	@Override
+	public void clear() {
+		head = null;
+		tail = null;
+		size = 0;
+	}
+
+	/**
+	 * Returns the element at the specified position in this list.
+	 * Video: https://youtu.be/a2XZiq8zmoo
+	 *
+	 * @param index index of the element to return
+	 * @return the element at the specified position in this list
+	 * @throws IndexOutOfBoundsException if the index is out of range
+	 */
+	@Override
+	public E get(int index) {
+		if (index < 0 || index >= size) {
+			throw new IndexOutOfBoundsException("Index out of range");
+		}
+
+		Node<E> current = getNodeAtIndex(index);
+		return current.data;
+	}
+
+	/**
+	 * Appends the specified element to the end of this list.
+	 * Video: https://youtu.be/-MhpmG7aQJo
+	 *
+	 * <p>Lists may place the specified element at arbitrary locations if desired.  In particular, an ordered list will
+	 * insert the specified element at its sorted location.  List classes should clearly specify in their documentation
+	 * how elements will be added to the list if different from the default behavior (end of this list).
+	 *
+	 * @param e element to be appended to this list
+	 * @return {@code true}
+	 * @throws NullPointerException if the specified element is null
+	 */
+	@Override
+	public boolean add(E e) {
+		if (e == null) {
+			throw new NullPointerException("Specified element is null");
+		}
+
+		Node<E> newNode = new Node<>(e, null, tail);
+		if (tail != null) {
+			tail.next = newNode;
+		}
+		tail = newNode;
+
+		if (head == null) {
+			head = newNode;
+		}
+
+		size++;
+		return true;
+	}
+
+	/**
+	 * Replaces the element at the specified position in this list with the specified element.
+	 * Video: https://youtu.be/m1SXelb11io
+	 *
+	 * @param index   index of the element to replace
+	 * @param element element to be stored at the specified position
+	 * @return the element previously at the specified position
+	 * @throws NullPointerException          if the specified element is null
+	 * @throws IndexOutOfBoundsException     if the index is out of range
+	 */
+	@Override
+	public E set(int index, E element) {
+		if (index < 0 || index >= size) {
+			throw new IndexOutOfBoundsException("Index out of range");
+		}
+
+		Node<E> current = getNodeAtIndex(index);
+		if (element == null) {
+			throw new NullPointerException("Element is null");
+		}
+		E oldValue = current.data;
+		current.data = element;
+		return oldValue;
+	}
+
+	/**
+	 * Returns an array containing all of the elements in this list in proper sequence (from first to last element).
+	 * Video: https://youtu.be/gkqTmgK_Mzw
+	 *
+	 * <p>The returned array will be "safe" in that no references to it are maintained by this list.  (In other words,
+	 * this method must allocate a new array even if this list is backed by an array). The caller is thus free to modify
+	 * the returned array.
+	 *
+	 * @return an array containing all of the elements in this list in proper sequence
+	 */
+	@Override
+	public Object[] toArray() {
+		Object[] array = new Object[size];
+		Node<E> current = head;
+		int i = 0;
+
+		while (current != null) {
+			array[i] = current.data;
+			current = current.next;
+			i++;
+		}
+
+		return array;
+	}
+
+	/**
+	 * Removes the first occurrence of the specified element from this list, if it is present.  If this list does not
+	 * contain the element, it is unchanged. Returns {@code true} if this list contained the specified element.
+	 * Video: https://youtu.be/j21Nsj1-NAQ
+	 *
+	 * @param o element to be removed from this list, if present
+	 * @return {@code true} if this list contained the specified element
+	 * @throws NullPointerException if the specified element is null
+	 */
+	@Override
+	public boolean remove(Object o) {
+		if (o == null) {
+			throw new NullPointerException("Specified element is null");
+		}
+
+		Node<E> current = head;
+		while (current != null) {
+			if (current.data.equals(o)) {
+				removeNode(current);
+				return true;
+			}
+			current = current.next;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Removes the element at the specified position in this list.  Shifts any subsequent elements to the left
+	 * (subtracts one from their indices).  Returns the element that was removed from the list.
+	 * Video: https://youtu.be/rP72ELAZ4cE
+	 *
+	 * @param index the index of the element to be removed
+	 * @return the element previously at the specified position
+	 * @throws IndexOutOfBoundsException if the index is out of range
+	 */
+	@Override
+	public E remove(int index) {
+		if (index < 0 || index >= size) {
+			throw new IndexOutOfBoundsException("Index out of range");
+		}
+
+		Node<E> current = getNodeAtIndex(index);
+		E removedData = current.data;
+		removeNode(current);
+		return removedData;
+	}
+
+	/**
+	 * Inserts the specified element at the specified position in this list.  Shifts the element
+	 * currently at that position (if any) and any subsequent elements to the right (adds one to their indices).
+	 * Video: https://youtu.be/y95wPZndYfU
+	 *
+	 * @param index   index at which the specified element is to be inserted
+	 * @param element element to be inserted
+	 * @throws NullPointerException          if the specified element is null
+	 * @throws IndexOutOfBoundsException     if the index is out of range
+	 */
+	@Override
+	public void add(int index, E element) {
+		if (index < 0 || index > size) {
+			throw new IndexOutOfBoundsException("Index out of range");
+		}
+
+		if (index == size) {
+			add(element);  // Adding at the end
+			return;
+		}
+
+		if (element == null) {
+			throw new NullPointerException("Specified element is null");
+		}
+
+		Node<E> current = getNodeAtIndex(index);
+		Node<E> newNode = new Node<>(element, current, current.prev);
+
+		if (current.prev != null) {
+			current.prev.next = newNode;
+		} else {
+			head = newNode;
+		}
+
+		current.prev = newNode;
+		size++;
+	}
+
+	/**
+	 * Appends all elements in the specified list to the end of this list, in the order that they are returned by the
+	 * specified list's iterator.
+	 * Video: https://youtu.be/2Ajnol7VZzA
+	 *
+	 * @param c list containing elements to be added to this list
+	 * @return {@code true} if this list changed as a result of the call
+	 * @throws NullPointerException          if the specified list is null
+	 */
+	@Override
+	public boolean addAll(CiscList<? extends E> c) {
+		if (c == null) {
+			throw new NullPointerException("Specified list is null");
+		}
+
+		boolean modified = false;
+		for (E element : c) {
+			if (add(element)) {
+				modified = true;
+			}
+		}
+
+		return modified;
+	}
+
+	/**
+	 * Returns an iterator over the elements in this list in proper sequence.
+	 * Video: https://youtu.be/o9hc1QPyQ_E
+	 *
+	 * @return an iterator over the elements in this list in proper sequence
+	 */
+	@Override
+	public Iterator<E> iterator() {
+		return new CiscDoublyLinkedListIterator<>(head);
+	}
+
+	private Node<E> getNodeAtIndex(int index) {
+		Node<E> current = head;
+		for (int i = 0; i < index; i++) {
+			current = current.next;
+		}
+		return current;
+	}
+	private void removeNode(Node<E> node) {
+		if (node.prev != null) {
+			node.prev.next = node.next;
+		} else {
+			head = node.next;
+		}
+
+		if (node.next != null) {
+			node.next.prev = node.prev;
+		} else {
+			tail = node.prev;
+		}
+
+		size--;
+	}
+
+	private static class CiscDoublyLinkedListIterator<E> implements Iterator<E> {
+
+		/**
+		 * A reference to the node containing the next element to return.
+		 */
+		private Node<E> nextNode;
+
+		/**
+		 * Constructs an iterator beginning at the specified node.
+		 */
+		public CiscDoublyLinkedListIterator(Node<E> head) {
+			nextNode = head;
+		}
+
+		/**
+		 * Returns {@code true} if the iteration has more elements.
+		 * (In other words, returns {@code true} if {@link #next} would
+		 * return an element rather than throwing an exception.)
+		 *
+		 * @return {@code true} if the iteration has more elements
+		 */
+		@Override
+		public boolean hasNext() {
+			return nextNode != null;
+		}
+
+		/**
+		 * Returns the next element in the iteration.
+		 *
+		 * @return the next element in the iteration
+		 * @throws NoSuchElementException if the iteration has no more elements
+		 */
+		@Override
+		public E next() {
+			if (!hasNext()) {
+				throw new NoSuchElementException("There are no more elements");
+			}
+
+			E data = nextNode.data;
+			nextNode = nextNode.next;
+			return data;
+		}
+	}
+
+	private static class Node<E> {
+
+		private E data;
+		private Node<E> next;
+		private Node<E> prev;
+
+		private Node(E data, Node<E> next, Node<E> prev) {
+			this.data = data;
+			this.next = next;
+			this.prev = prev;
+		}
+	}
+}
