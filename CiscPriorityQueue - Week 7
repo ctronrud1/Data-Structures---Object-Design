@@ -1,0 +1,460 @@
+package edu.ust.cisc;
+
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+public class CiscPriorityQueue<E extends Comparable<E>> implements CiscCollection<E> {
+    /**
+     * Default initial capacity of elementData.
+     */
+    public static final int DEFAULT_CAPACITY = 10;
+    /**
+     * The array into which the elements of the CiscPriorityQueue are stored.
+     */
+    private E[] elementData;
+    /**
+     * The comparator to use when comparing elements.
+     */
+    private Comparator<E> comparator;
+    /**
+     * The size of the CiscPriorityQueue (the number of elements it contains).
+     */
+    private int size;
+
+    /**
+     * Constructs an empty priority queue with an initial capacity of DEFAULT_CAPACITY and no comparator.
+     * Video: https://youtu.be/5L6up_yK0YU
+     */
+    public CiscPriorityQueue() {
+        size = 0;
+        elementData = (E[]) new Comparable[DEFAULT_CAPACITY];
+    }
+
+
+    /**
+     * Constructs an empty priority queue with the specified initial capacity and no comparator.
+     * Video: https://youtu.be/5L6up_yK0YU
+     *
+     * @param  initialCapacity  the initial capacity of the priority queue
+     * @throws IllegalArgumentException if the specified initial capacity is negative
+     */
+    public CiscPriorityQueue(int initialCapacity) {
+        if (initialCapacity < 0) {
+            throw new IllegalArgumentException("Initial capacity cannot be negative");
+        }
+        size = 0;
+        elementData = (E[]) new Comparable[initialCapacity];
+    }
+
+
+    /**
+     * Constructs an empty priority queue with an initial capacity of DEFAULT_CAPACITY and the specified comparator.
+     * Video: https://youtu.be/5L6up_yK0YU
+     *
+     * @param comparator the comparator to use when comparing elements
+     */
+    public CiscPriorityQueue(Comparator<E> comparator) {
+        size = 0;
+        elementData = (E[]) new Comparable[DEFAULT_CAPACITY];
+        this.comparator = comparator;
+
+    }
+
+
+    /**
+     * Constructs an empty priority queue with the specified initial capacity and comparator.
+     * Video: https://youtu.be/5L6up_yK0YU
+     *
+     * @param initialCapacity  the initial capacity of the priority queue
+     * @param comparator the comparator to use when comparing elements
+     * @throws IllegalArgumentException if the specified initial capacity is negative
+     */
+    @SuppressWarnings("unchecked")
+    public CiscPriorityQueue(int initialCapacity, Comparator<E> comparator) {
+        if (initialCapacity < 0) {
+            throw new IllegalArgumentException("Initial capacity cannot be negative");
+        }
+
+        this.elementData = (E[]) new Comparable[initialCapacity];
+        this.comparator = comparator;
+        this.size = 0;
+    }
+
+
+    /**
+     * Adds the specified element to this priority queue's min heap.  Elements are added as the bottom right-most leaf
+     * node and bubbled up until the min-heap property is restored.
+     * Video: https://youtu.be/HaO6sWEdRJ4
+     *
+     * <p>Collections may place the specified element at arbitrary locations if desired.  Collection classes should
+     * clearly specify in their documentation how elements will be added to the collection.
+     *
+     * @param value element to be added to this min heap
+     * @return {@code true}
+     * @throws NullPointerException if the specified element is null
+     */
+    public boolean add(E value) {
+        if (value == null) {
+            throw new NullPointerException();
+        }
+        ensureCapacity(size + 1);
+        elementData[size] = value;
+        bubbleUp(size);
+        size++;
+        return true;
+    }
+
+    private void bubbleUp(int index) {
+        if (index <= 0) {
+            return;
+        }
+        int parentIndex = (index - 1) / 2;
+        if (compare(elementData[index], elementData[parentIndex]) < 0) {
+            E temp = elementData[index];
+            elementData[index] = elementData[parentIndex];
+            elementData[parentIndex] = temp;
+            bubbleUp(parentIndex);
+        }
+    }
+
+
+    /**
+     * This method is not supported by a CiscPriorityQueue.
+     * Video: https://youtu.be/BeGFNsiwOSs
+     *
+     * @param o element to be removed from this collection, if present
+     * @return {@code true} if this collection contained the specified element
+     * @throws UnsupportedOperationException if the {@code remove} operation is not supported by this collection
+     */
+    @Override
+    public boolean remove(Object o) {
+        throw new UnsupportedOperationException();
+    }
+
+    private void removeAt(int index) {
+        if (index < 0 || index >= size) {
+            return;
+        }
+        elementData[index] = elementData[size - 1];
+        elementData[size - 1] = null;
+        size--;
+        bubbleDown(index);
+    }
+
+    private void bubbleDown(int index) {
+        // Implement the logic to restore the min-heap property after removal
+        // by bubbling the element down
+        // ....
+        int leftChildIndex = 2 * index + 1;
+        int rightChildIndex = 2 * index + 2;
+        int smallest = index;
+
+        if (leftChildIndex < size && compare(elementData[leftChildIndex], elementData[smallest]) < 0) {
+            smallest = leftChildIndex;
+        }
+        if (rightChildIndex < size && compare(elementData[rightChildIndex], elementData[smallest]) < 0) {
+            smallest = rightChildIndex;
+        }
+
+        if (smallest != index) {
+            E temp = elementData[index];
+            elementData[index] = elementData[smallest];
+            elementData[smallest] = temp;
+            bubbleDown(smallest);
+        }
+    }
+
+
+
+    /**
+     * Adds all elements in the specified collection to this priority queue, in the order that they are returned by the
+     * specified collection's iterator (optional operation).
+     * Video: https://youtu.be/9bAoLi2MAi0
+     *
+     * @param c collection containing elements to be added to this collection
+     * @return {@code true} if this collection changed as a result of the call
+     * @throws UnsupportedOperationException if the {@code addAll} operation is not supported by this collection
+     * @throws NullPointerException          if the specified collection is null
+     */
+    @Override
+    public boolean addAll(CiscCollection<? extends E> c) {
+        if (c == null) {
+            throw new NullPointerException();
+        }
+
+        boolean modified = false;
+
+        for (E element : c) {
+            if (add(element)) {
+                modified = true;
+            }
+        }
+
+        return modified;
+    }
+
+
+    /**
+     * Returns {@code true} if this collection contains no elements.
+     * Video: https://youtu.be/pZX33zuBMs4
+     *
+     * @return {@code true} if this collection contains no elements
+     */
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
+    /**
+     * Returns the element at the top of the min heap.
+     * Video: https://youtu.be/SC-aubDtojI
+     *
+     * @return the element at the top of the min heap
+     * @throws NoSuchElementException if the priority queue is empty
+     */
+    public E peek() {
+        if (isEmpty()) {
+            throw new NoSuchElementException();
+        }
+        return elementData[0];
+    }
+
+
+    /**
+     * Returns and removes the element at the top of the min heap. The element at the bottom right-most leaf should
+     * be moved to the top of the heap and bubbled down until the min-heap property is restored.
+     * Video: https://youtu.be/TCVOrneDdgA
+     *
+     * @return the element at the top of the min heap
+     * @throws NoSuchElementException if the priority queue is empty
+     */
+    public E remove() {
+        if (isEmpty()) {
+            throw new NoSuchElementException();
+        }
+
+        E topElement = elementData[0];
+
+        elementData[0] = elementData[size - 1];
+        elementData[size - 1] = null;
+        size--;
+
+        bubbleDown(0);
+
+        return topElement;
+    }
+
+
+    /**
+     * Returns the number of elements in this collection.
+     * Video: https://youtu.be/MOAx3HmqQtE
+     *
+     * @return the number of elements in this collection
+     */
+    public int size() {
+        return size;
+    }
+
+    /**
+     * Removes all of the elements from this collection. The collection will be empty after this call returns.
+     * Video: https://youtu.be/WkYtPN9KMDw
+     */
+    public void clear() {
+        for (int i = 0; i < size; i ++) {
+            elementData[i] = null;
+        }
+        size = 0;
+    }
+
+    /**
+     * Returns {@code true} if this collection contains the specified element (compared using the {@code equals}
+     * method).  Your implementation should stop searching down a branch as soon as it is able to do so.  You may wish
+     * to implement a recursive helper method returns a boolean indicating whether the specified element was found in
+     * either the left branch or the right branch.
+     * Video: https://youtu.be/kuaENP-vx_M
+     *
+     * @param value element whose presence in this collection is to be tested
+     * @return {@code true} if this collection contains the specified element
+     * @throws NullPointerException if the specified element is null
+     */
+    public boolean contains(Object value) {
+        if (value == null) {
+            throw new NullPointerException();
+        }
+
+        return containsRecursive(value, 0);
+    }
+
+    private boolean containsRecursive(Object value, int index) {
+        if (index >= size || elementData[index] == null) {
+            return false;
+        }
+
+        if (compare(elementData[index], (E) value) == 0) {
+            return true;
+        }
+        if (compare((E) value, elementData[index]) < 0){
+            return false;
+        }
+
+        int leftChildIndex = 2 * index + 1;
+        int rightChildIndex = 2 * index + 2;
+
+        return containsRecursive(value, leftChildIndex) || containsRecursive(value, rightChildIndex);
+    }
+
+
+    /**
+     * Returns an array containing all of the elements in this collection in proper sequence (level by level from top to
+     * bottom, left to right for each level).
+     *
+     * <p>The returned array will be "safe" in that no references to it are maintained by this collection.  (In other
+     * words, this method must allocate a new array even if this collection is backed by an array). The caller is thus
+     * free to modify the returned array.
+     *
+     * @return an array containing all of the elements in this collection in proper sequence
+     */
+    public Object[] toArray() {
+        Comparable[] comparable = new Comparable[size];
+        Iterator itr = iterator();
+        int index = 0;
+        while (itr.hasNext()) {
+            comparable[index] = (Comparable) itr.next();
+            index++;
+        }
+        return comparable;
+    }
+
+    /**
+     * Returns an iterator over the elements in this collection in proper sequence (level by level from top to bottom,
+     * left to right for each level).
+     * Video: https://youtu.be/v8C8ndskhvk
+     *
+     * @return an iterator over the elements in this collection in proper sequence
+     */
+    public Iterator<E> iterator() {
+        return new CiscPriorityQueueIterator();
+    }
+
+    /**
+     * Returns a string representation of this collection. This string should consist of a comma-separated list of
+     * values contained in this collection (level by level from top to bottom, left to right for each level), surrounded
+     * by square brackets (examples: [3, 6, 7] and []).
+     *
+     * @return a string representation of this collection
+     */
+    public String toString() {
+        return Arrays.toString(toArray());
+//        StringBuilder sb = new StringBuilder();
+//        sb.append("[");
+//        if (size > 0) {
+//            toStringRecursive(0, sb);
+//        }
+//        sb.append("]");
+//        return sb.toString();
+//    }
+//
+//    private void toStringRecursive(int index, StringBuilder sb) {
+//        if (index < size) {
+//            if (index > 0) {
+//                sb.append(", ");
+//            }
+//            sb.append(elementData[index]);
+//            toStringRecursive(2 * index + 1, sb); // Left child
+//            toStringRecursive(2 * index + 2, sb); // Right child
+//        }
+    }
+
+
+    /**
+     * Ensures that the capacity of the underlying array is at least {@code minCapacity}. If not, the underlying array
+     * will be replaced with a new array whose capacity is either {@code minCapacity} or double the current capacity + 1
+     * (whichever is larger).
+     *
+     * @param minCapacity minimum capacity of the underlying array
+     */
+    private void ensureCapacity(int minCapacity) {
+        int currentCapacity = elementData.length;
+
+        if (minCapacity > currentCapacity) {
+            int newCapacity = Math.max(minCapacity, currentCapacity * 2 + 1);
+            E[] newElementData = (E[]) new Comparable[newCapacity];
+
+            for (int i = 0; i < currentCapacity; i++) {
+                newElementData[i] = elementData[i];
+            }
+
+            elementData = newElementData;
+        }
+    }
+
+
+    /**
+     * Compares two objects using the priority queue's comparator (if present), otherwise using the element's compareTo
+     * method.
+     *
+     * @param item1 the first argument to pass to the comparator's compare method (if present), otherwise the calling
+     *              object for the compareTo call
+     * @param item2 the second argument to pass to the comparator's compare method (if present), otherwise the argument
+     *              for the compareTo call
+     * @return a negative int if item1 < item2, a positive int if item1 > item2, or 0 if item1 is equal to item2
+     */
+    private int compare(E item1, E item2) {
+        if (comparator != null) {
+            return comparator.compare(item1, item2);
+        } else {
+            return item1.compareTo(item2);
+        }
+    }
+
+
+    private class CiscPriorityQueueIterator implements Iterator<E> {
+        /**
+         * Stores the index of the next element to return.
+         */
+        private int nextIndex;
+
+        /**
+         * Returns {@code true} if the iteration has more elements. (In other words, returns {@code true} if
+         * {@link #next} would return an element rather than throwing an exception.)
+         *
+         * @return {@code true} if the iteration has more elements
+         */
+        @Override
+        public boolean hasNext() {
+            return elementData[nextIndex] != null && nextIndex < size;
+        }
+
+        /**
+         * Returns the next element in the iteration.
+         *
+         * @return the next element in the iteration
+         * @throws NoSuchElementException if the iteration has no more elements
+         */
+        @Override
+        public E next() {
+//            E data = elementData[nextIndex];
+//            if (!hasNext()) {
+//                nextIndex++;
+//                return data;
+//            }
+//            throw new NoSuchElementException();
+//        }
+//
+//    }
+//}
+
+            if (!hasNext()) {
+               throw new NoSuchElementException();
+            }
+
+            E element = elementData[nextIndex];
+            nextIndex++;
+
+            return element;
+        }
+
+    }
+}
+
