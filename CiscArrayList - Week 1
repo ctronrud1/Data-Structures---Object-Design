@@ -44,7 +44,7 @@ public class CiscArrayList<E> implements CiscList<E> {
 
     /**
      * Returns the number of elements in this list.
-     * Video: https://youtu.be/BULwr13VTfo
+     * 
      *
      * @return the number of elements in this list
      */
@@ -55,7 +55,7 @@ public class CiscArrayList<E> implements CiscList<E> {
 
     /**
      * Returns {@code true} if this list contains no elements.
-     * Video: https://youtu.be/6iBl6ayQ8Tg
+     * 
      *
      * @return {@code true} if this list contains no elements
      */
@@ -66,7 +66,7 @@ public class CiscArrayList<E> implements CiscList<E> {
 
     /**
      * Returns {@code true} if this list contains the specified element (compared using the {@code equals} method).
-     * Video: https://youtu.be/j76BVoXKWRI
+     * 
      *
      * @param o element whose presence in this list is to be tested
      * @return {@code true} if this list contains the specified element
@@ -88,7 +88,7 @@ public class CiscArrayList<E> implements CiscList<E> {
     /**
      * Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not
      * contain the element (compared using the {@code equals} method).
-     * Video: https://youtu.be/1rkSbRmLLPA
+     * 
      *
      * @param o element to search for
      * @return the index of the first occurrence of the specified element in this list, or -1 if this list does not
@@ -110,7 +110,7 @@ public class CiscArrayList<E> implements CiscList<E> {
 
     /**
      * Removes all of the elements from this list. The list will be empty after this call returns.
-     * Video: https://youtu.be/qRCy1eYKSgg
+     * 
      */
     @Override
     public void clear() {
@@ -122,7 +122,7 @@ public class CiscArrayList<E> implements CiscList<E> {
 
     /**
      * Returns the element at the specified position in this list.
-     * Video: https://youtu.be/OW_GeYlecAo
+     * 
      *
      * @param index index of the element to return
      * @return the element at the specified position in this list
@@ -138,7 +138,7 @@ public class CiscArrayList<E> implements CiscList<E> {
 
     /**
      * Appends the specified element  to the end of this list.
-     * Video: https://youtu.be/C9gUHGhtrkQ
+     * 
      *
      * <p>Lists may place the specified element at arbitrary locations if desired.  In particular, an ordered list will
      * insert the specified element at its sorted location.  List classes should clearly specify in their documentation
@@ -160,7 +160,7 @@ public class CiscArrayList<E> implements CiscList<E> {
 
     /**
      * Replaces the element at the specified position in this list with the specified element.
-     * Video: https://youtu.be/sw2NpbTPzvE
+     * 
      *
      * @param index   index of the element to replace
      * @param element element to be stored at the specified position
@@ -183,7 +183,7 @@ public class CiscArrayList<E> implements CiscList<E> {
 
     /**
      * Returns an array containing all of the elements in this list in proper sequence (from first to last element).
-     * Video: https://youtu.be/XmRzQJWdc40
+     *
      *
      * <p>The returned array will be "safe" in that no references to it are maintained by this list.  (In other words,
      * this method must allocate a new array even if this list is backed by an array). The caller is thus free to modify
@@ -203,7 +203,7 @@ public class CiscArrayList<E> implements CiscList<E> {
     /**
      * Removes the first occurrence of the specified element from this list, if it is present.  If this list does not
      * contain the element, it is unchanged. Returns {@code true} if this list contained the specified element.
-     * Video: https://youtu.be/REExeuHFToI
+     * 
      *
      * @param o element to be removed from this list, if present
      * @return {@code true} if this list contained the specified element
@@ -227,7 +227,7 @@ public class CiscArrayList<E> implements CiscList<E> {
     /**
      * Removes the element at the specified position in this list.  Shifts any subsequent elements to the left
      * (subtracts one from their indices).  Returns the element that was removed from the list.
-     * Video: https://youtu.be/vIiVAydLNXI
+     * 
      *
      * @param index the index of the element to be removed
      * @return the element previously at the specified position
@@ -250,7 +250,7 @@ public class CiscArrayList<E> implements CiscList<E> {
     /**
      * Inserts the specified element at the specified position in this list.  Shifts the element
      * currently at that position (if any) and any subsequent elements to the right (adds one to their indices).
-     * Video: https://youtu.be/C1PTT1xShKk
+     * 
      *
      * @param index   index at which the specified element is to be inserted
      * @param element element to be inserted
@@ -274,7 +274,7 @@ public class CiscArrayList<E> implements CiscList<E> {
     /**
      * Appends all elements in the specified list to the end of this list, in the order that they are returned by the
      * specified list's iterator.
-     * Video: https://youtu.be/Xl5D_qYrmsE
+     * 
      *
      * @param c list containing elements to be added to this list
      * @return {@code true} if this list changed as a result of the call
@@ -295,7 +295,7 @@ public class CiscArrayList<E> implements CiscList<E> {
 
     /**
      * Returns an iterator over the elements in this list in proper sequence.
-     * Video: Video: https://youtu.be/0wkDnsM3dZ0
+     * 
      *
      * @return an iterator over the elements in this list in proper sequence
      */
@@ -308,7 +308,7 @@ public class CiscArrayList<E> implements CiscList<E> {
      * Ensures that the capacity of the underlying array is at least {@code minCapacity}. If not, the underlying array
      * will be replaced with a new array whose capacity is either {@code minCapacity} or double the current capacity + 1
      * (whichever is larger).
-     * Video: https://youtu.be/FunlEIk1FKA
+     * 
      *
      * @param minCapacity minimum capacity of the underlying array
      */
